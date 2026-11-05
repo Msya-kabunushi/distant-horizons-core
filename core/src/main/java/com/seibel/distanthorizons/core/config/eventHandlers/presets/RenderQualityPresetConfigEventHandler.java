@@ -117,9 +117,9 @@ public class RenderQualityPresetConfigEventHandler extends AbstractPresetConfigE
 	private final ConfigPresetOptions<EDhApiQualityPreset, Boolean> caveCulling = new ConfigPresetOptions<>(Config.Client.Advanced.Graphics.Culling.enableCaveCulling,
 			new HashMap<EDhApiQualityPreset, Boolean>()
 			{{
-				this.put(EDhApiQualityPreset.MINIMUM, true);
-				this.put(EDhApiQualityPreset.LOW, true);
-				this.put(EDhApiQualityPreset.MEDIUM, true);
+				this.put(EDhApiQualityPreset.MINIMUM, false);
+				this.put(EDhApiQualityPreset.LOW, false);
+				this.put(EDhApiQualityPreset.MEDIUM, false);
 				this.put(EDhApiQualityPreset.HIGH, false);
 				this.put(EDhApiQualityPreset.EXTREME, false);
 			}});

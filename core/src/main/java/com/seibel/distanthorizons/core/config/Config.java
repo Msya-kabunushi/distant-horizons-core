@@ -795,7 +795,7 @@ public class Config
 					public static ConfigUISpacer speedSpacer = new ConfigUISpacer.Builder().build();
 					
 					public static ConfigEntry<Boolean> enableCaveCulling = new ConfigEntry.Builder<Boolean>()
-						.set(true)
+						.set(false)
 						.comment(""
 							+ "If enabled caves won't be rendered. \n"
 							+ "\n"
