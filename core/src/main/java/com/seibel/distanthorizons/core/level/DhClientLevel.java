@@ -118,16 +118,21 @@ public class DhClientLevel extends AbstractDhLevel implements IDhClientLevel
 		File saveFolder = saveStructure.getSaveFolder(clientLevelWrapper);
 		File pre23Folder = saveStructure.getPre23SaveFolder(clientLevelWrapper);
 		
-		saveFolder.mkdirs();
-		
-		if (pre23Folder.exists())
+		// Pre-2.3 multiplayer folders are only named after the dimension type,
+		// so every world of that type shares one database. Moving it would hand the
+		// mixed terrain to whichever world loads first, so multiplayer starts fresh.
+		// Replays keep the move since users place their databases there by hand.
+		// The move must come before mkdirs, Windows can't rename onto an existing folder.
+		if (MC_CLIENT.connectedToReplay()
+			&& pre23Folder.exists()
+			&& !saveFolder.exists()
+			&& !pre23Folder.renameTo(saveFolder))
 		{
-			if (!pre23Folder.renameTo(saveFolder))
-			{
-				throw new RuntimeException("Could not move old save data folder: [" + pre23Folder.getAbsolutePath() + "] to [" + saveFolder.getAbsolutePath() + "].");
-			}
+			LOGGER.warn("Could not move old save data folder: [" + pre23Folder.getAbsolutePath() + "] to [" + saveFolder.getAbsolutePath() + "].");
 		}
-		
+
+		saveFolder.mkdirs();
+
 		if (!saveFolder.exists())
 		{
 			throw new IOException("unable to create save folder at ["+saveFolder.getPath()+"]. If you're on Windows you may need to enable long file paths.");
