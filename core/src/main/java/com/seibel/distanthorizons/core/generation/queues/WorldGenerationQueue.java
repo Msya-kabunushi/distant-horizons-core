@@ -19,6 +19,7 @@
 
 package com.seibel.distanthorizons.core.generation.queues;
 
+import com.seibel.distanthorizons.core.util.LangUtil;
 import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiDistantGeneratorMode;
 import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiGeneratorPlan;
 import com.seibel.distanthorizons.api.interfaces.override.worldGenerator.IDhApiWorldGenerator;
@@ -631,7 +632,7 @@ public class WorldGenerationQueue implements IFullDataSourceRetrievalQueue, IDeb
 	@Override public byte lowestDataDetail() { return this.generator.getLargestDataDetailLevel(); }
 	@Override public byte highestDataDetail() { return this.generator.getSmallestDataDetailLevel(); }
 	
-	@Override public String getRetrievalTypeName() { return "generating chunks"; }
+	@Override public String getRetrievalTypeName() { return LangUtil.translateOr("distanthorizons.message.progress.generatingChunks", "generating chunks"); }
 	
 	@Override public long getRetrievalEstimatedRemainingChunkCount() { return this.estimatedRemainingChunkCount; }
 	@Override public void setRetrievalEstimatedRemainingChunkCount(long newEstimate) { this.estimatedRemainingChunkCount = newEstimate; }

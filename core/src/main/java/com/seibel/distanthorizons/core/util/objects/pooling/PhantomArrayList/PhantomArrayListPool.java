@@ -1,5 +1,6 @@
 package com.seibel.distanthorizons.core.util.objects.pooling.PhantomArrayList;
 
+import com.seibel.distanthorizons.core.util.LangUtil;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.enums.MinecraftTextFormat;
@@ -214,7 +215,7 @@ public class PhantomArrayListPool
 							LOGGER.warn(message);
 							if (Config.Common.Logging.Warning.showPoolInsufficientMemoryWarning.get())
 							{
-								ClientApi.INSTANCE.queueSlowChatMessage(message);
+								ClientApi.INSTANCE.queueSlowChatMessage(LangUtil.translateOr("distanthorizons.message.poolInsufficientMemory", message));
 							}
 						}
 					}

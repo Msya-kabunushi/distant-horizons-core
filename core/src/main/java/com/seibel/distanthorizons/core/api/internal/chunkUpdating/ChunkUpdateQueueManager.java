@@ -2,6 +2,7 @@ package com.seibel.distanthorizons.core.api.internal.chunkUpdating;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.seibel.distanthorizons.core.util.LangUtil;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.core.api.internal.SharedApi;
 import com.seibel.distanthorizons.core.config.Config;
@@ -179,7 +180,7 @@ public class ChunkUpdateQueueManager implements AutoCloseable
 			boolean showWarningInChat = Config.Common.Logging.Warning.showUpdateQueueOverloadedChatWarning.get();
 			if (showWarningInChat)
 			{
-				ClientApi.INSTANCE.queueSlowChatMessage(message);
+				ClientApi.INSTANCE.queueSlowChatMessage(LangUtil.translateOr("distanthorizons.message.queueOverloaded", message, this.maxSize, MAX_UPDATING_CHUNK_COUNT_PER_THREAD_AND_PLAYER));
 			}
 			
 			// Don't log warnings in singleplayer or in hosted LAN since it usually isn't a problem (and if it is it's easy to notice).

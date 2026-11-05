@@ -19,6 +19,7 @@
 
 package com.seibel.distanthorizons.core.sql.repo;
 
+import com.seibel.distanthorizons.core.util.LangUtil;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.enums.MinecraftTextFormat;
@@ -160,7 +161,7 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 							"A file path was [" + databaseFilePath.length() + "] characters long. \n" +
 							"Windows only supports file paths up to 260 chars normally. \n" +
 							"Please enable long file paths in Windows. \n";
-					ClientApi.INSTANCE.queueSlowChatMessage(message);
+					ClientApi.INSTANCE.queueSlowChatMessage(LangUtil.translateOr("distanthorizons.message.database.pathTooLong", message, databaseFilePath.length()));
 					
 					// add additional info to the log
 					windowsLongFileWarning = "Potential fix: enable long file paths in Windows.";
@@ -469,13 +470,14 @@ public abstract class AbstractDhRepo<TKey, TDTO extends IBaseDTO<TKey>> implemen
 							"Please leave the world and delete the corrupted database file to fix. \n" +
 							"Error: [" + e.getMessage() + "]", e);
 						
-						ClientApi.INSTANCE.queueSlowChatMessage(
+						ClientApi.INSTANCE.queueSlowChatMessage(LangUtil.translateOr("distanthorizons.message.database.corrupted",
 							MinecraftTextFormat.DARK_RED + MinecraftTextFormat.BOLD + "DH database is corrupted." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
 								"DH will behave strangely if your continue playing. \n" +
 								"Please leave the world and delete the corrupted database file at: \n" +
 								MinecraftTextFormat.YELLOW + this.databaseFile.getPath() + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
-								"to resolve the issue. \n"
-						);
+								"to resolve the issue. \n",
+								this.databaseFile.getPath()
+						));
 					}
 				}
 				

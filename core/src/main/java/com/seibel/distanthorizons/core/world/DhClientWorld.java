@@ -19,6 +19,7 @@
 
 package com.seibel.distanthorizons.core.world;
 
+import com.seibel.distanthorizons.core.util.LangUtil;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiLevelLoadEvent;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiLevelUnloadEvent;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
@@ -150,10 +151,10 @@ public class DhClientWorld extends AbstractDhWorld implements IDhClientWorld
 			String y = MinecraftTextFormat.YELLOW;
 			String cf = MinecraftTextFormat.CLEAR_FORMATTING;
 			
-			ClientApi.INSTANCE.queueSlowChatMessage(
+			ClientApi.INSTANCE.queueSlowChatMessage(LangUtil.translateOr("distanthorizons.message.levelLoadFailed.client",
 				r + "Distant Horizons: Client level loading failed." + cf + "\n" +
 				"Unable to load level ["+y+clientLevelWrapper.getDhIdentifier()+cf+"], LODs may not appear. See log for more information. \n" +
-				"");
+				"", clientLevelWrapper.getDhIdentifier()));
 			
 			return null;
 		}

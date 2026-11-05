@@ -1,5 +1,6 @@
 package com.seibel.distanthorizons.core.generation.queues;
 
+import com.seibel.distanthorizons.core.util.LangUtil;
 import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiDistantGeneratorProgressDisplayLocation;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.core.config.Config;
@@ -102,14 +103,16 @@ public abstract class AbstractLodRequestState
 		remainingChunkCount += this.retrievalQueue.getQueuedChunkCount();
 		String remainingChunkCountStr = F3Screen.NUMBER_FORMAT.format(remainingChunkCount);
 		
-		String message = "DH is "+this.retrievalQueue.getRetrievalTypeName()+". ";
+		String typeName = this.retrievalQueue.getRetrievalTypeName();
+		String message = LangUtil.translateOr("distanthorizons.message.progress.status", "DH is "+typeName+". ", typeName);
 		if (this.dhLevel.getClass() == DhServerLevel.class)
 		{
 			// server levels can have multiple world generators running at once,
 			// this helps us track of which queue is which
-			message += "For " + this.dhLevel.getLevelWrapper().getDimensionName() + " ";
+			String dimensionName = this.dhLevel.getLevelWrapper().getDimensionName();
+			message += LangUtil.translateOr("distanthorizons.message.progress.forDimension", "For " + dimensionName + " ", dimensionName);
 		}
-		message += remainingChunkCountStr + " left.";
+		message += LangUtil.translateOr("distanthorizons.message.progress.remaining", remainingChunkCountStr + " left.", remainingChunkCountStr);
 		
 		// show a message about how to disable progress logging if requested
 		int msToShowDisableInstructions = Config.Common.WorldGenerator.generationProgressDisableMessageDisplayTimeInSeconds.get() * 1_000;
@@ -122,7 +125,7 @@ public abstract class AbstractLodRequestState
 				|| timeSinceFirstMessageInMs < msToShowDisableInstructions)
 			{
 				// append to the current message
-				message += " This message can be hidden in the DH config.";
+				message += LangUtil.translateOr("distanthorizons.message.progress.hideHint", " This message can be hidden in the DH config.");
 			}
 		}
 		
@@ -131,11 +134,13 @@ public abstract class AbstractLodRequestState
 		if (chunksPerSec > 0)
 		{
 			long estimatedRemainingTime = (long) (remainingChunkCount / chunksPerSec);
-			message += " ETA: " + FormatUtil.formatEta(Duration.ofSeconds(estimatedRemainingTime));
+			String eta = FormatUtil.formatEta(Duration.ofSeconds(estimatedRemainingTime));
+			message += LangUtil.translateOr("distanthorizons.message.progress.eta", " ETA: " + eta, eta);
 			
 			if (Config.Common.WorldGenerator.generationProgressIncludeChunksPerSecond.get())
 			{
-				message += " at " + F3Screen.NUMBER_FORMAT.format(chunksPerSec) + " chunks/sec";
+				String speed = F3Screen.NUMBER_FORMAT.format(chunksPerSec);
+				message += LangUtil.translateOr("distanthorizons.message.progress.speed", " at " + speed + " chunks/sec", speed);
 			}
 		}
 		

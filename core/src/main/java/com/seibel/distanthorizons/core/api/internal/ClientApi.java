@@ -19,6 +19,8 @@
 
 package com.seibel.distanthorizons.core.api.internal;
 
+import java.util.function.Supplier;
+import com.seibel.distanthorizons.core.util.LangUtil;
 import com.seibel.distanthorizons.api.DhApi;
 import com.seibel.distanthorizons.api.enums.config.EDhApiMcRenderingFadeMode;
 import com.seibel.distanthorizons.api.enums.rendering.EDhApiRenderPass;
@@ -128,7 +130,7 @@ public class ClientApi
 	
 	private long lastSlowChatMessageSentMsTime = 0L;
 	
-	private final Queue<String> slowChatMessageQueue = new LinkedBlockingQueue<>();
+	private final Queue<Supplier<String>> slowChatMessageQueue = new LinkedBlockingQueue<>();
 	private final Queue<String> fastChatMessageQueue = new LinkedBlockingQueue<>();
 	private final Queue<String> overlayMessageQueue = new LinkedBlockingQueue<>();
 	
@@ -206,11 +208,11 @@ public class ClientApi
 				
 				if (Config.Common.Logging.Warning.showReplayWarningOnStartup.get())
 				{
-					MC_CLIENT.sendChatMessage(MinecraftTextFormat.ORANGE + "Distant Horizons: Replay detected." + MinecraftTextFormat.CLEAR_FORMATTING);
-					MC_CLIENT.sendChatMessage("DH may behave strangely or have missing functionality.");
-					MC_CLIENT.sendChatMessage("In order to use pre-generated LODs, put your DH database(s) in:");
+					MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.replay.detected", MinecraftTextFormat.ORANGE + "Distant Horizons: Replay detected." + MinecraftTextFormat.CLEAR_FORMATTING));
+					MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.replay.warning", "DH may behave strangely or have missing functionality."));
+					MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.replay.location", "In order to use pre-generated LODs, put your DH database(s) in:"));
 					MC_CLIENT.sendChatMessage(MinecraftTextFormat.GRAY +".Minecraft" + File.separator + ClientOnlySaveStructure.SERVER_DATA_FOLDER_NAME + File.separator + ClientOnlySaveStructure.REPLAY_SERVER_FOLDER_NAME + File.separator + "DIMENSION_NAME"+ MinecraftTextFormat.CLEAR_FORMATTING);
-					MC_CLIENT.sendChatMessage("This message can be disabled in DH's config under Advanced -> Logging.");
+					MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.replay.disableHint", "This message can be disabled in DH's config under Advanced -> Logging."));
 					MC_CLIENT.sendChatMessage("");
 				}
 			}
@@ -665,10 +667,10 @@ public class ClientApi
 				this.rendererDisabledBecauseOfExceptions = true;
 				LOGGER.error("Unexpected Renderer error in render pass [" + renderPass + "]. Error: " + e.getMessage(), e);
 				
-				MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "" + MinecraftTextFormat.BOLD + "ERROR: Distant Horizons renderer has encountered an exception!" + MinecraftTextFormat.CLEAR_FORMATTING);
-				MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "Renderer disabled to try preventing GL state corruption." + MinecraftTextFormat.CLEAR_FORMATTING);
-				MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "Toggle DH rendering via the config UI to re-activate DH rendering." + MinecraftTextFormat.CLEAR_FORMATTING);
-				MC_CLIENT.sendChatMessage(MinecraftTextFormat.DARK_RED + "Error: " + MinecraftTextFormat.CLEAR_FORMATTING + e);
+				MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.renderer.exception1", MinecraftTextFormat.DARK_RED + "" + MinecraftTextFormat.BOLD + "ERROR: Distant Horizons renderer has encountered an exception!" + MinecraftTextFormat.CLEAR_FORMATTING));
+				MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.renderer.exception2", MinecraftTextFormat.DARK_RED + "Renderer disabled to try preventing GL state corruption." + MinecraftTextFormat.CLEAR_FORMATTING));
+				MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.renderer.exception3", MinecraftTextFormat.DARK_RED + "Toggle DH rendering via the config UI to re-activate DH rendering." + MinecraftTextFormat.CLEAR_FORMATTING));
+				MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.renderer.exception4", MinecraftTextFormat.DARK_RED + "Error: " + MinecraftTextFormat.CLEAR_FORMATTING + e, e));
 			}
 			
 			//endregion
@@ -784,17 +786,17 @@ public class ClientApi
 		if (glfwKey == KeyCodesUtil.F6)
 		{
 			Config.Client.Advanced.Debugging.rendererMode.set(EDhApiRendererMode.next(Config.Client.Advanced.Debugging.rendererMode.get()));
-			MC_CLIENT.sendChatMessage("F6: Set rendering to " + Config.Client.Advanced.Debugging.rendererMode.get());
+			MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.debugKey.rendering", "F6: Set rendering to " + Config.Client.Advanced.Debugging.rendererMode.get(), Config.Client.Advanced.Debugging.rendererMode.get()));
 		}
 		else if (glfwKey == KeyCodesUtil.F7)
 		{
 			Config.Client.Advanced.Debugging.lodOnlyMode.set(!Config.Client.Advanced.Debugging.lodOnlyMode.get());
-			MC_CLIENT.sendChatMessage("F7: Set LOD only mode to " + Config.Client.Advanced.Debugging.lodOnlyMode.get());
+			MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.debugKey.lodOnly", "F7: Set LOD only mode to " + Config.Client.Advanced.Debugging.lodOnlyMode.get(), Config.Client.Advanced.Debugging.lodOnlyMode.get()));
 		}
 		else if (glfwKey == KeyCodesUtil.F8)
 		{
 			Config.Client.Advanced.Debugging.debugRenderingColors.set(EDhApiDebugRendering.next(Config.Client.Advanced.Debugging.debugRenderingColors.get()));
-			MC_CLIENT.sendChatMessage("F8: Set debug mode to " + Config.Client.Advanced.Debugging.debugRenderingColors.get());
+			MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.debugKey.debugMode", "F8: Set debug mode to " + Config.Client.Advanced.Debugging.debugRenderingColors.get(), Config.Client.Advanced.Debugging.debugRenderingColors.get()));
 		}
 	}
 	
@@ -836,12 +838,9 @@ public class ClientApi
 				// to prevent ever sending any if a lot of fast messages are being sent
 				this.lastSlowChatMessageSentMsTime = System.currentTimeMillis();
 				
-				String message = this.slowChatMessageQueue.poll();
-				if (message == null)
-				{
-					// done to prevent potential null pointers
-					message = "";
-				}
+				Supplier<String> messageSupplier = this.slowChatMessageQueue.poll();
+				// done to prevent potential null pointers
+				String message = (messageSupplier != null) ? messageSupplier.get() : "";
 				MC_CLIENT.sendChatMessage(message);
 			}
 		}
@@ -915,7 +914,7 @@ public class ClientApi
 						"Stuttering or low FPS may occur. \n" +
 						"Please increase Minecraft's available memory to 4 GB or more. \n" +
 						"This warning can be disabled in DH's config under Advanced -> Logging. \n";
-				MC_CLIENT.sendChatMessage(message);
+				MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.lowMemory", message));
 			}
 		}
 		
@@ -940,7 +939,7 @@ public class ClientApi
 					"and reduce stuttering at a similar visual quality.\n" +
 					MinecraftTextFormat.GRAY + "A vanilla render distance of 8 is recommended." + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
 					"This message can be disabled in DH's config under Advanced -> Logging.\n";
-				MC_CLIENT.sendChatMessage(message);
+				MC_CLIENT.sendChatMessage(LangUtil.translateOr("distanthorizons.message.highRenderDistance", message));
 			}
 		}
 	}
@@ -962,7 +961,10 @@ public class ClientApi
 	 * Queues the given message to appear in chat the next valid frame.
 	 * Useful for queueing up messages that may be triggered before the user has loaded into the world. 
 	 */
-	public void queueSlowChatMessage(String chatMessage) { this.slowChatMessageQueue.add(chatMessage); }
+	public void queueSlowChatMessage(String chatMessage) { this.slowChatMessageQueue.add(() -> chatMessage); }
+	
+	/** Builds the message when it is sent, for warnings created before the game's language has loaded. */
+	public void queueSlowChatMessage(Supplier<String> chatMessage) { this.slowChatMessageQueue.add(chatMessage); }
 	
 	/** 
 	 * Similar to {@link ClientApi#queueSlowChatMessage(String)}

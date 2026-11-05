@@ -1,5 +1,6 @@
 package com.seibel.distanthorizons.core.multiplayer.client;
 
+import com.seibel.distanthorizons.core.util.LangUtil;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.config.listeners.ConfigChangeListener;
@@ -109,11 +110,11 @@ public class ClientNetworkState implements Closeable
 				
 				if (ModInfo.PROTOCOL_VERSION < event.protocolVersion)
 				{
-					ClientApi.INSTANCE.queueSlowChatMessage(MinecraftTextFormat.ORANGE + "Distant Horizons: Your mod is outdated. Update to receive LODs on this server.");
+					ClientApi.INSTANCE.queueSlowChatMessage(LangUtil.translateOr("distanthorizons.message.network.clientOutdated", MinecraftTextFormat.ORANGE + "Distant Horizons: Your mod is outdated. Update to receive LODs on this server."));
 				}
 				else
 				{
-					ClientApi.INSTANCE.queueSlowChatMessage(MinecraftTextFormat.ORANGE + "Distant Horizons: The server's mod is outdated. Ask the server's owner to update.");
+					ClientApi.INSTANCE.queueSlowChatMessage(LangUtil.translateOr("distanthorizons.message.network.serverOutdated", MinecraftTextFormat.ORANGE + "Distant Horizons: The server's mod is outdated. Ask the server's owner to update."));
 				}
 			}
 		});

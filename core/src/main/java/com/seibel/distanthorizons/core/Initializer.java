@@ -20,6 +20,7 @@
 package com.seibel.distanthorizons.core;
 
 import com.github.luben.zstd.ZstdOutputStream;
+import com.seibel.distanthorizons.core.util.LangUtil;
 import com.seibel.distanthorizons.api.interfaces.render.IDhApiCustomRenderObjectFactory;
 import com.seibel.distanthorizons.api.methods.events.abstractEvents.DhApiBeforeRenderEvent;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
@@ -250,10 +251,10 @@ public class Initializer
 				
 				if (Config.Common.Logging.Warning.showGarbageCollectorWarning.get())
 				{
-					ClientApi.INSTANCE.queueSlowChatMessage(
+					ClientApi.INSTANCE.queueSlowChatMessage(() -> LangUtil.translateOr("distanthorizons.message.g1Gc",
 						MinecraftTextFormat.ORANGE + warningMessageHeader + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
 						warningMessageBody +
-						"");
+						""));
 				}
 			}
 		}
@@ -307,10 +308,10 @@ public class Initializer
 				
 				if (Config.Common.Logging.Warning.showExplicitGcDisabledWarning.get())
 				{
-					ClientApi.INSTANCE.queueSlowChatMessage(
+					ClientApi.INSTANCE.queueSlowChatMessage(() -> LangUtil.translateOr("distanthorizons.message.explicitGcDisabled",
 						MinecraftTextFormat.ORANGE + warningMessageHeader + MinecraftTextFormat.CLEAR_FORMATTING + "\n" +
 						warningMessageBody +
-						"");
+						""));
 				}
 			}
 		}

@@ -1,5 +1,6 @@
 package com.seibel.distanthorizons.core.file.fullDatafile.V2;
 
+import com.seibel.distanthorizons.core.util.LangUtil;
 import com.seibel.distanthorizons.core.api.internal.ClientApi;
 import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSourceV1;
 import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSourceV2;
@@ -271,26 +272,28 @@ public class DataMigratorV1 implements AutoCloseable
 		}
 		this.migrationStartMessageQueued = true;
 		
-		ClientApi.INSTANCE.queueSlowChatMessage(
+		ClientApi.INSTANCE.queueSlowChatMessage(LangUtil.translateOr("distanthorizons.message.migration.start",
 				"Old Distant Horizons data is being migrated for ["+this.levelId+"]. \n" +
 				"While migrating LODs may load slowly \n" +
 				"and DH world gen will be disabled. \n" +
-				"You can see migration progress in the F3 menu."
-		);
+				"You can see migration progress in the F3 menu.",
+				this.levelId
+		));
 	}
 	
 	private void showMigrationEndMessage(boolean success)
 	{
 		if (success)
 		{
-			ClientApi.INSTANCE.queueSlowChatMessage("Distant Horizons data migration for ["+this.levelId+"] completed.");
+			ClientApi.INSTANCE.queueSlowChatMessage(LangUtil.translateOr("distanthorizons.message.migration.done", "Distant Horizons data migration for ["+this.levelId+"] completed.", this.levelId));
 		}
 		else
 		{
-			ClientApi.INSTANCE.queueSlowChatMessage(
+			ClientApi.INSTANCE.queueSlowChatMessage(LangUtil.translateOr("distanthorizons.message.migration.stopped",
 					"Distant Horizons data migration for ["+this.levelId+"] stopped. \n" +
-					"Some data may not have been migrated."
-			);
+					"Some data may not have been migrated.",
+					this.levelId
+			));
 		}
 	}
 	
