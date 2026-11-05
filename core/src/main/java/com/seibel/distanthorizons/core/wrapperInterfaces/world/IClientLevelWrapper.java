@@ -46,5 +46,8 @@ public interface IClientLevelWrapper extends ILevelWrapper
 	Color getCloudColor(float tickDelta);
 	
 	float getShade(EDhDirection lodDirection);
-	
+
+	/** @return true if vanilla currently holds this chunk and can render it */
+	default boolean isChunkLoaded(int chunkX, int chunkZ) { return true; }
+
 }

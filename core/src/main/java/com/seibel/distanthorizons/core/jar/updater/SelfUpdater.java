@@ -62,6 +62,8 @@ public class SelfUpdater
 	private static final String MC_VERSION = VERSION_CONSTANTS.getMinecraftVersion();
 	
 	/** As we cannot delete(or replace) the jar while the mod is running, we just have this to delete it once the game closes */
+	private static final boolean DISABLED_FOR_CUSTOM_BUILD = true;
+
 	public static boolean deleteOldJarOnJvmShutdown = false;
 	
 	public static File newFileLocation;
@@ -75,6 +77,14 @@ public class SelfUpdater
 	 */
 	public static boolean onStart()
 	{
+		// This is a custom build. Updates are compared by jar hash, so any official
+		// release would look like an update and would remove this build's fixes.
+		if (DISABLED_FOR_CUSTOM_BUILD)
+		{
+			LOGGER.info("Distant Horizons auto update is disabled for this custom build.");
+			return false;
+		}
+
 		if (!Config.Client.Advanced.AutoUpdater.enableAutoUpdater.get())
 		{
 			LOGGER.info("Distant Horizons auto update disabled.");

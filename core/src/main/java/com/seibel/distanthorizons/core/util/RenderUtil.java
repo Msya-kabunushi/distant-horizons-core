@@ -28,6 +28,7 @@ import com.seibel.distanthorizons.core.dependencyInjection.ModAccessorInjector;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.logging.DhLogger;
 import com.seibel.distanthorizons.core.logging.DhLoggerBuilder;
+import com.seibel.distanthorizons.core.pos.blockPos.DhBlockPos;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftClientWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.minecraft.IMinecraftRenderWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.modAccessor.IIrisAccessor;
@@ -62,8 +63,90 @@ public class RenderUtil
 		public static final float MAX_SPEED = (float)LodUtil.MAX_SPECTATOR_SPEED_IN_BLOCKS_PER_SEC;
 		public static final float MIN_OVERDRAW_RATIO = 0.2f;
 	}
-	
-	
+
+	private static final UnloadedChunkLimiter UNLOADED_CHUNK_LIMITER = new UnloadedChunkLimiter();
+
+	/**
+	 * Limits the near clip distance so LODs stay visible over chunks
+	 * vanilla can't draw yet (slow chunk sending, just changed worlds, etc.)
+	 */
+	private static class UnloadedChunkLimiter
+	{
+		private static final long SCAN_INTERVAL_IN_NANOS = 50_000_000L;
+		/**
+		 * Limits are applied immediately, but are removed gradually so the LOD
+		 * cutout doesn't pop and Sodium has some time to build the newly loaded chunks.
+		 */
+		private static final float RECOVERY_IN_BLOCKS_PER_SEC = 96.0f;
+		/** Matches the terrain shader, which adds this to the near clip distance */
+		private static final float CLIP_DISTANCE_PADDING_IN_BLOCKS = 16.0f;
+		/** Matches the terrain shader, which fully fades in LODs at this multiple of the clip distance */
+		private static final float DITHER_FADE_END_MULTIPLIER = 1.5f;
+
+		private long lastScanNanos = 0;
+		private float limit = Float.MAX_VALUE;
+
+		public synchronized float limit(float nearClip, IClientLevelWrapper level, int playerBlockX, int playerBlockZ)
+		{
+			long now = System.nanoTime();
+			long elapsedNanos = now - this.lastScanNanos;
+			if (elapsedNanos >= SCAN_INTERVAL_IN_NANOS)
+			{
+				this.lastScanNanos = now;
+
+				float target = findLimit(nearClip, level, playerBlockX, playerBlockZ);
+				float recovered = this.limit + (RECOVERY_IN_BLOCKS_PER_SEC * (elapsedNanos / 1_000_000_000f));
+				this.limit = Math.min(target, recovered);
+			}
+
+			return Math.min(nearClip, this.limit);
+		}
+
+		private static float findLimit(float nearClip, IClientLevelWrapper level, int playerBlockX, int playerBlockZ)
+		{
+			float fadeEndMultiplier = Config.Client.Advanced.Graphics.Quality.ditherDhFade.get() ? DITHER_FADE_END_MULTIPLIER : 1.0f;
+
+			// LODs are only hidden inside this radius, chunks outside it don't matter
+			float cutoutRadius = (nearClip + CLIP_DISTANCE_PADDING_IN_BLOCKS) * fadeEndMultiplier;
+			cutoutRadius = Math.min(cutoutRadius, MC_RENDER.getRenderDistance() * (float) LodUtil.CHUNK_WIDTH);
+
+			int playerChunkX = Math.floorDiv(playerBlockX, LodUtil.CHUNK_WIDTH);
+			int playerChunkZ = Math.floorDiv(playerBlockZ, LodUtil.CHUNK_WIDTH);
+			int chunkRadius = (int) Math.ceil(cutoutRadius / LodUtil.CHUNK_WIDTH) + 1;
+			float halfChunkWidth = LodUtil.CHUNK_WIDTH / 2.0f;
+
+			float closestUnloaded = Float.MAX_VALUE;
+			for (int chunkX = playerChunkX - chunkRadius; chunkX <= playerChunkX + chunkRadius; chunkX++)
+			{
+				float centerX = (chunkX * LodUtil.CHUNK_WIDTH) + halfChunkWidth;
+				float distanceX = Math.max(Math.abs(playerBlockX - centerX) - halfChunkWidth, 0.0f);
+
+				for (int chunkZ = playerChunkZ - chunkRadius; chunkZ <= playerChunkZ + chunkRadius; chunkZ++)
+				{
+					float centerZ = (chunkZ * LodUtil.CHUNK_WIDTH) + halfChunkWidth;
+					float distanceZ = Math.max(Math.abs(playerBlockZ - centerZ) - halfChunkWidth, 0.0f);
+
+					float distance = (float) Math.sqrt((distanceX * distanceX) + (distanceZ * distanceZ));
+					if (distance < cutoutRadius
+						&& distance < closestUnloaded
+						&& !level.isChunkLoaded(chunkX, chunkZ))
+					{
+						closestUnloaded = distance;
+					}
+				}
+			}
+
+			if (closestUnloaded == Float.MAX_VALUE)
+			{
+				return Float.MAX_VALUE;
+			}
+
+			// the near clip plane should never be closer than 1 block, see getNearClipPlaneDistanceInBlocks()
+			return Math.max((closestUnloaded / fadeEndMultiplier) - CLIP_DISTANCE_PADDING_IN_BLOCKS, 1.0f);
+		}
+	}
+
+
 	
 	//=====================//
 	// matrix manipulation //
@@ -129,7 +212,38 @@ public class RenderUtil
 	//=================//
 	//region
 	
+	/**
+	 * The distance DH actually starts drawing LODs at. <br>
+	 * Pulled closer than {@link #getVanillaFadeNearClipPlaneInBlocks()} while vanilla chunks
+	 * inside the LOD cutout are unloaded, otherwise those chunks would appear as holes.
+	 */
 	public static float getNearClipPlaneInBlocks()
+	{
+		float nearClip = getVanillaFadeNearClipPlaneInBlocks();
+
+		if (!Config.Client.Advanced.Graphics.Culling.reduceOverdrawForUnloadedChunks.get()
+			|| Config.Client.Advanced.Debugging.lodOnlyMode.get()
+			|| getHeightBasedNearClipOverrideBlockDistance() != -1.0f)
+		{
+			return nearClip;
+		}
+
+		IClientLevelWrapper level = MC.getWrappedClientLevel();
+		if (level == null)
+		{
+			return nearClip;
+		}
+
+		DhBlockPos playerPos = MC.getPlayerBlockPos();
+		return UNLOADED_CHUNK_LIMITER.limit(nearClip, level, playerPos.getX(), playerPos.getZ());
+	}
+
+	/**
+	 * The near clip distance ignoring unloaded chunks. <br>
+	 * Vanilla fading uses this so vanilla terrain that's already loaded
+	 * doesn't fade away just because a different chunk hasn't loaded yet.
+	 */
+	public static float getVanillaFadeNearClipPlaneInBlocks()
 	{
 		float overdraw = Config.Client.Advanced.Graphics.Culling.overdrawPrevention.get();
 		if (overdraw < 0)

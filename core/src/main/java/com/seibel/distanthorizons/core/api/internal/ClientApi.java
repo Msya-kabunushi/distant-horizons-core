@@ -250,12 +250,24 @@ public class ClientApi
 	{
 		HashSet<Pair<IClientLevelWrapper, DhChunkPos>> keysToRemove = new HashSet<>();
 		String levelDimensionName = level.getDimensionName();
+		Object mcLevel = level.getWrappedMcObject();
 		for (Pair<IClientLevelWrapper, DhChunkPos> levelChunkPair : this.waitingChunkByClientLevelAndPos.keySet())
 		{
-			// only load chunks that came from this level
+			// only load chunks that came from this level.
+			// The MC level is compared instead of the dimension name since
+			// different worlds can share a dimension name on plugin servers,
+			// a keyed and non-keyed wrapper for the same level will still match.
 			IClientLevelWrapper levelWrapper = levelChunkPair.first;
-			if (levelWrapper.equals(level)
-				|| levelWrapper.getDimensionName().equals(levelDimensionName))
+			if (!levelWrapper.equals(level)
+				&& levelWrapper.getWrappedMcObject() != mcLevel)
+			{
+				if (levelWrapper.getDimensionName().equals(levelDimensionName))
+				{
+					// these chunks belong to a level that has since been replaced
+					keysToRemove.add(levelChunkPair);
+				}
+			}
+			else
 			{
 				IChunkWrapper chunkWrapper = this.waitingChunkByClientLevelAndPos.get(levelChunkPair);
 				SharedApi.INSTANCE.applyChunkUpdate(

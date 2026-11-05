@@ -780,7 +780,18 @@ public class Config
 							+ "generate chunks fast enough to keep up with DH.\n"
 							+ "")
 						.build();
-					
+
+					public static ConfigEntry<Boolean> reduceOverdrawForUnloadedChunks = new ConfigEntry.Builder<Boolean>()
+						.set(true)
+						.comment(""
+							+ "If set to true LODs will be drawn closer to the camera\n"
+							+ "while nearby vanilla chunks are still loading.\n"
+							+ "\n"
+							+ "This prevents holes from appearing where\n"
+							+ "the server hasn't sent chunks yet.\n"
+							+ "")
+						.build();
+
 					public static ConfigUISpacer speedSpacer = new ConfigUISpacer.Builder().build();
 					
 					public static ConfigEntry<Boolean> enableCaveCulling = new ConfigEntry.Builder<Boolean>()

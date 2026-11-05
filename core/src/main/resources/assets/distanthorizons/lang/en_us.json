@@ -375,6 +375,10 @@
     "Reduce Overdraw With Fast Movement",
   "distanthorizons.config.client.advanced.graphics.culling.reduceOverdrawWithFastMovement.@tooltip":
     "If set to true the overdraw prevention radius will get closer \nto the camera when flying/moving quickly. \n\nThis helps reduce issues where Minecraft can't load or \ngenerate chunks fast enough to keep up with DH.",
+  "distanthorizons.config.client.advanced.graphics.culling.reduceOverdrawForUnloadedChunks":
+    "Reduce Overdraw For Unloaded Chunks",
+  "distanthorizons.config.client.advanced.graphics.culling.reduceOverdrawForUnloadedChunks.@tooltip":
+    "If set to true LODs will be drawn closer to the camera \nwhile nearby vanilla chunks are still loading. \n\nThis prevents holes from appearing where \nthe server hasn't sent chunks yet.",
   "distanthorizons.config.client.advanced.graphics.culling.enableCaveCulling":
     "Enable Cave Culling",
   "distanthorizons.config.client.advanced.graphics.culling.enableCaveCulling.@tooltip":
