@@ -18,12 +18,13 @@ public class WorldGenUtil
 		int centerChunkX, int centerChunkZ,
 		int maxChunkRadius)
 	{
-		if (Config.Common.WorldGenerator.generationMaxChunkRadius.get() <= 0)
+		// 手元の設定ではなく引数で判定する。サーバーから受け取った範囲もここで判定するため。
+		if (maxChunkRadius <= 0)
 		{
 			return true;
 		}
-		
-		
+
+
 		DhBlockPos centerBlockPos = new DhChunkPos(centerChunkX, centerChunkZ).centerBlockPos();
 		int blockDistanceFromCenter = DhSectionPos.getChebyshevSignedBlockDistance(requestedPos, centerBlockPos);
 		int maxBlockRadius = maxChunkRadius * LodUtil.CHUNK_WIDTH;

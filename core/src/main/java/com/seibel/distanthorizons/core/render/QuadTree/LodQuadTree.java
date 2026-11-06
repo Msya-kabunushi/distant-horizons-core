@@ -885,11 +885,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			long missingPos = this.sortedMissingPosList.get(i);
 			
 			// is this position within acceptable generator range?
-			boolean posInRange = WorldGenUtil.isPosInWorldGenRange(
-				missingPos,
-				Config.Common.WorldGenerator.generationCenterChunkX.get(), Config.Common.WorldGenerator.generationCenterChunkZ.get(),
-				Config.Common.WorldGenerator.generationMaxChunkRadius.get()
-			);
+			boolean posInRange = this.fullDataSourceProvider.isPosInRetrievalRange(missingPos);
 			if (!posInRange)
 			{
 				continue;
@@ -943,7 +939,13 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			for (int i = 0; i < this.sortedMissingPosList.size(); i++)
 			{
 				long missingPos = this.sortedMissingPosList.get(i);
-				
+
+				// 要求しない区画を数えると、残り件数がいつまでも 0 にならない
+				if (!this.fullDataSourceProvider.isPosInRetrievalRange(missingPos))
+				{
+					continue;
+				}
+
 				// chunk count
 				long sectionWidthInChunks = DhSectionPos.getChunkWidth(missingPos);
 				totalWorldGenChunkCount += (sectionWidthInChunks * sectionWidthInChunks);

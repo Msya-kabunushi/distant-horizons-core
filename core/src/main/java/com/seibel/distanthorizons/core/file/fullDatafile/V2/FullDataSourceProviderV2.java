@@ -37,6 +37,7 @@ import com.seibel.distanthorizons.core.render.renderer.IDebugRenderable;
 import com.seibel.distanthorizons.core.sql.dto.FullDataSourceV2DTO;
 import com.seibel.distanthorizons.core.sql.repo.AbstractDhRepo;
 import com.seibel.distanthorizons.core.sql.repo.FullDataSourceV2Repo;
+import com.seibel.distanthorizons.core.util.WorldGenUtil;
 import com.seibel.distanthorizons.core.util.objects.DataCorruptedException;
 import com.seibel.distanthorizons.core.util.threading.ThreadPoolUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.ILevelWrapper;
@@ -402,9 +403,19 @@ public class FullDataSourceProviderV2 implements IDebugRenderable, AutoCloseable
 		return !this.dataMigratorV1.migrationThreadRunning.get();
 	}
 	
+	/** 取得を要求してよい範囲か。範囲外の区画は要求せず、残り件数にも数えない */
+	public boolean isPosInRetrievalRange(long pos)
+	{
+		return WorldGenUtil.isPosInWorldGenRange(
+			pos,
+			Config.Common.WorldGenerator.generationCenterChunkX.get(), Config.Common.WorldGenerator.generationCenterChunkZ.get(),
+			Config.Common.WorldGenerator.generationMaxChunkRadius.get()
+		);
+	}
+
 	/**
 	 * @return null if this provider can't generate any positions or
-	 * an empty array if all positions were generated 
+	 * an empty array if all positions were generated
 	 */
 	@Nullable
 	public LongArrayList getPositionsToRetrieve(long pos, byte generatorDetailLevel) { return null; }	

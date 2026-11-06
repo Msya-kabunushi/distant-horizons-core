@@ -33,6 +33,8 @@ import com.seibel.distanthorizons.core.generation.tasks.ERetrievalResultState;
 import com.seibel.distanthorizons.core.multiplayer.client.SyncOnLoadRequestQueue;
 import com.seibel.distanthorizons.core.multiplayer.client.ClientNetworkState;
 import com.seibel.distanthorizons.core.logging.DhLogger;
+import com.seibel.distanthorizons.core.multiplayer.config.SessionConfig;
+import com.seibel.distanthorizons.core.util.WorldGenUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -92,7 +94,23 @@ public class RemoteFullDataSourceProvider extends GeneratedFullDataSourceProvide
 
 	@Override
 	public boolean canQueueRetrievalNow() { return this.canQueueRetrievalNow(true); }
-	
+
+	@Override
+	public boolean isPosInRetrievalRange(long pos)
+	{
+		if (this.networkState == null)
+		{
+			return super.isPosInRetrievalRange(pos);
+		}
+
+		SessionConfig sessionConfig = this.networkState.sessionConfig;
+		return WorldGenUtil.isPosInWorldGenRange(
+			pos,
+			sessionConfig.getGenerationCenterChunkX(), sessionConfig.getGenerationCenterChunkZ(),
+			sessionConfig.getGenerationMaxChunkRadius()
+		);
+	}
+
 	@Override
 	@Nullable
 	public FullDataSourceV2 get(long pos)
