@@ -64,7 +64,8 @@ public class Config
 			.build();
 		
 		public static ConfigUiLinkedEntry quickLodChunkRenderDistance = new ConfigUiLinkedEntry(Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius);
-		
+		public static ConfigUIComment quickRenderDistanceHint = new ConfigUIComment.Builder().build();
+
 		public static ConfigEntry<EDhApiQualityPreset> qualityPresetSetting = new ConfigEntry.Builder<EDhApiQualityPreset>()
 			.set(EDhApiQualityPreset.MEDIUM) // the default value is set via the listener when accessed
 			.setAppearance(EConfigEntryAppearance.ONLY_IN_GUI)
@@ -78,12 +79,8 @@ public class Config
 			.addListener(ThreadPresetConfigEventHandler.INSTANCE)
 			.build();
 		
-		public static ConfigUiLinkedEntry quickWorldGeneratorPlan = new ConfigUiLinkedEntry(Common.WorldGenerator.generatorPlan);
-		
 		public static ConfigUiLinkedEntry quickShowWorldGenProgress = new ConfigUiLinkedEntry(Common.WorldGenerator.showGenerationProgress);
-		
-		public static ConfigUiLinkedEntry quickLodCloudRendering = new ConfigUiLinkedEntry(Advanced.Graphics.GenericRendering.enableCloudRendering);
-		
+
 		public static ConfigEntry<Boolean> showDhOptionsButtonInMinecraftUi = new ConfigEntry.Builder<Boolean>()
 			.set(true)
 			.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE)
@@ -106,16 +103,26 @@ public class Config
 			public static ConfigCategory graphics = new ConfigCategory.Builder().set(Graphics.class).build();
 			public static ConfigCategory worldGenerator = new ConfigCategory.Builder().set(Common.WorldGenerator.class).setDestination("common.worldGenerator").build();
 			public static ConfigCategory multiplayer = new ConfigCategory.Builder().set(Multiplayer.class).build();
-			public static ConfigCategory server = new ConfigCategory.Builder().set(Server.class).setDestination("server").build();
-			public static ConfigCategory lodBuilding = new ConfigCategory.Builder().set(Common.LodBuilding.class).setDestination("common.lodBuilding").build();
 			public static ConfigCategory multiThreading = new ConfigCategory.Builder().set(Common.MultiThreading.class).setDestination("common.multiThreading").build();
-			public static ConfigCategory autoUpdater = new ConfigCategory.Builder().set(AutoUpdater.class).build();
-			
-			public static ConfigCategory logging = new ConfigCategory.Builder().set(Common.Logging.class).setDestination("common.logging").build();
-			public static ConfigCategory debugging = new ConfigCategory.Builder().set(Debugging.class).build();
-			
-			
-			
+			public static ConfigCategory developer = new ConfigCategory.Builder().set(Developer.class).build();
+
+
+
+			/**
+			 * 普段は触らない項目を、1 つの入口にまとめる。
+			 * 設定ファイルの場所と翻訳キーが変わらないよう、移動前の階層を destination で指定する。
+			 */
+			public static class Developer
+			{
+				public static ConfigCategory server = new ConfigCategory.Builder().set(Server.class).setDestination("server").build();
+				public static ConfigCategory lodBuilding = new ConfigCategory.Builder().set(Common.LodBuilding.class).setDestination("common.lodBuilding").build();
+				public static ConfigCategory autoUpdater = new ConfigCategory.Builder().set(AutoUpdater.class).setDestination("client.advanced.autoUpdater").build();
+				public static ConfigCategory logging = new ConfigCategory.Builder().set(Common.Logging.class).setDestination("common.logging").build();
+				public static ConfigCategory debugging = new ConfigCategory.Builder().set(Debugging.class).setDestination("client.advanced.debugging").build();
+			}
+
+
+
 			public static class Graphics
 			{
 				public static ConfigUIComment advancedGraphicsHeader = new ConfigUIComment.Builder().setParentConfigClass(Graphics.class).build();

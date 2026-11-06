@@ -105,6 +105,22 @@
     "Multi-Threading",
   "distanthorizons.config.client.advanced.logging":
     "Logging",
+  "distanthorizons.config.client.quickRenderDistanceHint":
+    "Farther distances are heavier",
+  "distanthorizons.config.client.advanced.developer":
+    "Developer options",
+  "distanthorizons.config.client.advanced.developer.@tooltip":
+    "Logging, debugging and other settings you normally don't need to change.",
+  "distanthorizons.config.client.advanced.developer.server":
+    "Server",
+  "distanthorizons.config.client.advanced.developer.lodBuilding":
+    "LOD Building",
+  "distanthorizons.config.client.advanced.developer.autoUpdater":
+    "Auto Updater",
+  "distanthorizons.config.client.advanced.developer.logging":
+    "Logging",
+  "distanthorizons.config.client.advanced.developer.debugging":
+    "Debugging",
 
   
   
