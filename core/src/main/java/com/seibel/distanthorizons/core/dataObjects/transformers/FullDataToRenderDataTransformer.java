@@ -36,6 +36,7 @@ import com.seibel.distanthorizons.core.pos.DhSectionPos;
 import com.seibel.distanthorizons.core.util.*;
 import com.seibel.distanthorizons.core.wrapperInterfaces.IWrapperFactory;
 import com.seibel.distanthorizons.core.wrapperInterfaces.block.IBlockStateWrapper;
+import com.seibel.distanthorizons.core.util.FullDataPointUtil;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IBiomeWrapper;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.IClientLevelWrapper;
 import com.seibel.distanthorizons.coreapi.util.BitShiftUtil;
@@ -136,12 +137,22 @@ public class FullDataToRenderDataTransformer
 			RenderDataPointReducingList reducingList = new RenderDataPointReducingList())
 		{
 			DhBlockPosMutable mutableBlockPos = new DhBlockPosMutable();
+			boolean[] solidColumns = findSolidColumns(fullDataSource);
 			for (int x = 0; x < FullDataSourceV2.WIDTH; x++)
 			{
 				for (int z = 0; z < FullDataSourceV2.WIDTH; z++)
 				{
 					columnSource.populateColumnView(columnArrayView, x, z);
 					LongArrayList dataColumn = fullDataSource.getColumnAtRelPos(x, z);
+					if (!solidColumns[x * FullDataSourceV2.WIDTH + z])
+					{
+						// kabu: fill small holes in otherwise solid ground, see findHoleFiller
+						LongArrayList filler = findHoleFiller(fullDataSource, solidColumns, x, z);
+						if (filler != null)
+						{
+							dataColumn = filler;
+						}
+					}
 					
 					updateOrReplaceRenderDataViewColumnWithFullDataColumn(
 						levelWrapper, fullDataSource,
@@ -156,6 +167,88 @@ public class FullDataToRenderDataTransformer
 		}
 		
 		return columnSource;
+	}
+	
+	//==================//
+	// kabu: hole filling //
+	//==================//
+	
+	/** Holes up to this many columns away from solid ground on every side are filled */
+	private static final int MAX_HOLE_REACH = 4;
+	
+	/** Whether each column (index {@code x * WIDTH + z}) holds at least one non-air block */
+	private static boolean[] findSolidColumns(FullDataSourceV2 fullDataSource)
+	{
+		boolean[] solid = new boolean[FullDataSourceV2.WIDTH * FullDataSourceV2.WIDTH];
+		for (int x = 0; x < FullDataSourceV2.WIDTH; x++)
+		{
+			for (int z = 0; z < FullDataSourceV2.WIDTH; z++)
+			{
+				LongArrayList column = fullDataSource.getColumnAtRelPos(x, z);
+				if (column == null)
+				{
+					continue;
+				}
+				for (int i = 0; i < column.size(); i++)
+				{
+					IBlockStateWrapper block = fullDataSource.mapping.getBlockStateWrapper(FullDataPointUtil.getId(column.getLong(i)));
+					if (block != null && !block.isAir())
+					{
+						solid[x * FullDataSourceV2.WIDTH + z] = true;
+						break;
+					}
+				}
+			}
+		}
+		return solid;
+	}
+	
+	/**
+	 * kabu: a few-block hole in the middle of solid ground (a column with only air, surrounded by solid
+	 * columns within {@link #MAX_HOLE_REACH} in all four directions) gets the closest solid neighbour's column.
+	 * Server LODs sometimes have such holes (stale height maps after WorldEdit edits and the like) and they
+	 * show the sky through the ground. Edges of islands, the void outside a map and real pits wider than
+	 * the reach are left alone, since some direction has no solid ground. Holes on the border of a
+	 * data source can't see the neighbouring source and are left alone too.
+	 *
+	 * @return the column to draw instead, or null to keep the hole
+	 */
+	@Nullable
+	private static LongArrayList findHoleFiller(FullDataSourceV2 fullDataSource, boolean[] solid, int x, int z)
+	{
+		int[][] directions = { {1, 0}, {-1, 0}, {0, 1}, {0, -1} };
+		int bestDistance = Integer.MAX_VALUE;
+		int bestX = -1;
+		int bestZ = -1;
+		for (int[] direction : directions)
+		{
+			int found = -1;
+			for (int step = 1; step <= MAX_HOLE_REACH; step++)
+			{
+				int nx = x + direction[0] * step;
+				int nz = z + direction[1] * step;
+				if (nx < 0 || nz < 0 || nx >= FullDataSourceV2.WIDTH || nz >= FullDataSourceV2.WIDTH)
+				{
+					break;
+				}
+				if (solid[nx * FullDataSourceV2.WIDTH + nz])
+				{
+					found = step;
+					if (step < bestDistance)
+					{
+						bestDistance = step;
+						bestX = nx;
+						bestZ = nz;
+					}
+					break;
+				}
+			}
+			if (found < 0)
+			{
+				return null;
+			}
+		}
+		return fullDataSource.getColumnAtRelPos(bestX, bestZ);
 	}
 	
 	/** Updates the given {@link ColumnRenderView} to match the incoming Full data {@link LongArrayList} */
