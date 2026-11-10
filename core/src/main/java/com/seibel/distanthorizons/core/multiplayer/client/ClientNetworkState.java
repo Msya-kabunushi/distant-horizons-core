@@ -49,6 +49,8 @@ public class ClientNetworkState implements Closeable
 	
 	private final NetworkSession networkSession = new NetworkSession(null);
 	private final CopyOnWriteArrayList<Runnable> sessionConfigListeners = new CopyOnWriteArrayList<>();
+	/** サーバーから受け取った取得範囲（中心と半径）が変わったときに呼ぶ */
+	private final CopyOnWriteArrayList<Runnable> requestBoundsListeners = new CopyOnWriteArrayList<>();
 	/**
 	 * Returns the client used by this instance. <p>
 	 * If you need to subscribe to any packet events, create an instance of {@link ScopedNetworkEventSource} using the returned instance.
@@ -65,6 +67,13 @@ public class ClientNetworkState implements Closeable
 	{
 		this.sessionConfigListeners.add(listener);
 		return () -> this.sessionConfigListeners.remove(listener);
+	}
+
+	/** 取得範囲が変わったら呼ばれる。範囲の外の LOD を描かないよう、表示を作り直すのに使う */
+	public Closeable addRequestBoundsListener(Runnable listener)
+	{
+		this.requestBoundsListeners.add(listener);
+		return () -> this.requestBoundsListeners.remove(listener);
 	}
 	
 	private EServerSupportStatus serverSupportStatus = EServerSupportStatus.NONE;
@@ -157,6 +166,9 @@ public class ClientNetworkState implements Closeable
 				String configChanges = this.sessionConfig.getDifferencesAsString(message.config, this.serverSupportStatus != EServerSupportStatus.FULL);
 				CONFIG_CHANGE_LOGGER.info("Connection config has been changed: [" + configChanges + "].");
 				boolean generatorPlanChanged = this.sessionConfig.getGeneratorPlan() != message.config.getGeneratorPlan();
+				boolean requestBoundsChanged = this.sessionConfig.getGenerationCenterChunkX() != message.config.getGenerationCenterChunkX()
+					|| this.sessionConfig.getGenerationCenterChunkZ() != message.config.getGenerationCenterChunkZ()
+					|| this.sessionConfig.getGenerationMaxChunkRadius() != message.config.getGenerationMaxChunkRadius();
 				
 				this.serverSupportStatus = EServerSupportStatus.FULL;
 				
@@ -174,6 +186,21 @@ public class ClientNetworkState implements Closeable
 						catch (Exception e)
 						{
 							LOGGER.error("Unexpected session config listener error: " + e.getMessage(), e);
+						}
+					}
+				}
+
+				if (requestBoundsChanged)
+				{
+					for (Runnable listener : this.requestBoundsListeners)
+					{
+						try
+						{
+							listener.run();
+						}
+						catch (Exception e)
+						{
+							LOGGER.error("Unexpected request bounds listener error: " + e.getMessage(), e);
 						}
 					}
 				}
@@ -244,6 +271,7 @@ public class ClientNetworkState implements Closeable
 	public void close()
 	{
 		this.sessionConfigListeners.clear();
+		this.requestBoundsListeners.clear();
 		this.fullDataPayloadReceiver.close();
 		this.adaptiveTransferSpeedListener.close();
 		this.configAnyChangeListener.close();

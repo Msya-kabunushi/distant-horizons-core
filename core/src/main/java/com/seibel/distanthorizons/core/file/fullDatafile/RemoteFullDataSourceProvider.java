@@ -23,6 +23,7 @@ import com.google.common.cache.CacheBuilder;
 import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiGeneratorPlan;
 import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dataObjects.fullData.sources.FullDataSourceV2;
+import com.seibel.distanthorizons.core.enums.EDhDirection;
 import com.seibel.distanthorizons.core.file.structure.ISaveStructure;
 import com.seibel.distanthorizons.core.generation.queues.RemoteWorldRetrievalQueue;
 import com.seibel.distanthorizons.core.generation.tasks.DataSourceRetrievalResult;
@@ -111,10 +112,38 @@ public class RemoteFullDataSourceProvider extends GeneratedFullDataSourceProvide
 		);
 	}
 
+	/**
+	 * サーバーから受け取った取得範囲の外か。範囲の外の LOD は、手元に残っていても描かない
+	 * （昔の範囲で受け取ったものや、範囲の外を歩いたときに手元で作ったものが見えないように）。
+	 * サーバーとつながっていないときは何も隠さない
+	 */
+	private boolean isHiddenByServer(long pos)
+	{
+		return this.networkState != null
+			&& this.networkState.isReady()
+			&& !this.isPosInRetrievalRange(pos);
+	}
+
+	@Override
+	public FullDataSourceV2 getAdjForDirection(long pos, EDhDirection direction)
+	{
+		if (this.isHiddenByServer(pos))
+		{
+			return FullDataSourceV2.createEmpty(pos);
+		}
+
+		return super.getAdjForDirection(pos, direction);
+	}
+
 	@Override
 	@Nullable
 	public FullDataSourceV2 get(long pos)
 	{
+		if (this.isHiddenByServer(pos))
+		{
+			return FullDataSourceV2.createEmpty(pos);
+		}
+
 		if (this.syncOnLoadRequestQueue == null)
 		{
 			// we have local data, but networking is unavailable.

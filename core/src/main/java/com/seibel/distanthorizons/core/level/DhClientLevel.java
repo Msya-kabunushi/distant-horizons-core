@@ -81,6 +81,8 @@ public class DhClientLevel extends AbstractDhLevel implements IDhClientLevel
 	private final ScopedNetworkEventSource networkEventSource;
 	@Nullable
 	private final Closeable sessionConfigListener;
+	@Nullable
+	private final Closeable requestBoundsListener;
 	
 	/** used when connected to a DH supported server so we don't process the same chunks multiple times */
 	private final Set<DhChunkPos> loadedOnceChunks = Collections.newSetFromMap(
@@ -161,6 +163,9 @@ public class DhClientLevel extends AbstractDhLevel implements IDhClientLevel
 		this.clientside = new ClientLevelModule(this);
 		this.sessionConfigListener = this.networkState != null
 			? this.networkState.addSessionConfigListener(this.clientside::onGeneratorPlanChanged)
+			: null;
+		this.requestBoundsListener = this.networkState != null
+			? this.networkState.addRequestBoundsListener(this.clientside::onRequestBoundsChanged)
 			: null;
 		
 		this.createAndSetSupportingRepos(this.remoteDataSourceProvider.repo.databaseFile);
@@ -416,6 +421,15 @@ public class DhClientLevel extends AbstractDhLevel implements IDhClientLevel
 			try
 			{
 				this.sessionConfigListener.close();
+			}
+			catch (Exception ignored) { }
+		}
+
+		if (this.requestBoundsListener != null)
+		{
+			try
+			{
+				this.requestBoundsListener.close();
 			}
 			catch (Exception ignored) { }
 		}

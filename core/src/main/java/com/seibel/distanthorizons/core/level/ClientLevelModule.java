@@ -220,6 +220,19 @@ public class ClientLevelModule implements Closeable, IDataSourceUpdateListenerFu
 		}
 	}
 
+	/**
+	 * サーバーの取得範囲が変わった。範囲の外の LOD は描かない（{@code RemoteFullDataSourceProvider#get}）ので、
+	 * 読み込み済みの区画を作り直して、範囲の外に残っている古い LOD を消す
+	 */
+	public void onRequestBoundsChanged()
+	{
+		ClientRenderState clientRenderState = this.ClientRenderStateRef.get();
+		if (clientRenderState != null && clientRenderState.quadtree != null)
+		{
+			clientRenderState.quadtree.clearRenderDataCache();
+		}
+	}
+
 	public void onGeneratorPlanChanged()
 	{
 		ClientRenderState clientRenderState = this.ClientRenderStateRef.get();
