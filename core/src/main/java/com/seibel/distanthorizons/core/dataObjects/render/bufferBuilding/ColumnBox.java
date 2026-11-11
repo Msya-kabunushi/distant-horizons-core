@@ -377,16 +377,17 @@ public class ColumnBox
 					|| (direction == EDhDirection.EAST && x == ((horizontalBlockWidth) * (ColumnRenderSource.WIDTH)))
 					|| (direction == EDhDirection.SOUTH && z == ((horizontalBlockWidth) * (ColumnRenderSource.WIDTH)));
 				
-				boolean isLit =
-					RenderDataPointUtil.getLightSky(adjPoint) != LodUtil.MIN_MC_LIGHT
-					|| RenderDataPointUtil.getLightBlock(adjPoint) != LodUtil.MIN_MC_LIGHT;
-				
+				// kabu: the face on a section border is drawn even when the neighbor is dark (solid underground).
+				// LODs closer than the overdraw prevention radius are discarded per fragment, and vanilla
+				// draws no wall at the edge of its render distance either, so underground nothing covered the
+				// boundary and the sky showed through. These border walls sit inside solid ground, so from the
+				// surface or a vanilla cave they stay hidden behind nearer faces; they only show where nothing
+				// else is drawn. Cave culling (caveCullingMaxY) still removes them below its height.
+
 				// render the face if...
 				boolean useAdjLighting =
 					// we're on the border... (holes can only happen on LOD borders since faces inside an LOD will always be the same detail level)
 					onBorder
-					// ...this face has some sort of lighting... (0 light generally means the face is covered by other blocks)
-					&& isLit
 					// ...and is above the culling height
 					&& RenderDataPointUtil.getYMax(adjPoint) >= caveCullingMaxY;
 				
