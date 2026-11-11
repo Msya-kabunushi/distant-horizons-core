@@ -116,7 +116,6 @@ public class Config
 			{
 				public static ConfigCategory server = new ConfigCategory.Builder().set(Server.class).setDestination("server").build();
 				public static ConfigCategory lodBuilding = new ConfigCategory.Builder().set(Common.LodBuilding.class).setDestination("common.lodBuilding").build();
-				public static ConfigCategory autoUpdater = new ConfigCategory.Builder().set(AutoUpdater.class).setDestination("client.advanced.autoUpdater").build();
 				public static ConfigCategory logging = new ConfigCategory.Builder().set(Common.Logging.class).setDestination("common.logging").build();
 				public static ConfigCategory debugging = new ConfigCategory.Builder().set(Debugging.class).setDestination("client.advanced.debugging").build();
 			}
@@ -990,8 +989,10 @@ public class Config
 			{
 				public static ConfigUIComment autoUpdaterHeader = new ConfigUIComment.Builder().setParentConfigClass(AutoUpdater.class).build();
 				
+				// この版は独自ビルドなので自動アップデートはしない（SelfUpdater でも止めている）。
+				// 設定画面からも外したので、ここは常に既定値の false のまま（更新履歴ボタンも出ない）
 				public static ConfigEntry<Boolean> enableAutoUpdater = new ConfigEntry.Builder<Boolean>()
-					.set(!isRunningInDevEnvironment())
+					.set(false)
 					.comment(""
 						+ "Automatically check for updates on game launch? \n"
 						+ "")
