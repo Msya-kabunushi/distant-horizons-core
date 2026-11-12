@@ -415,7 +415,8 @@ public class Config
 						.build();
 					
 					public static ConfigEntry<Boolean> enableMultiLayerClouds = new ConfigEntry.Builder<Boolean>()
-						.set(true)
+						// kabu: バニラと同じ 1 層を既定にする（3 層だと雲が重なって見える）
+						.set(false)
 						.comment(""
 							+ "False = DH will render a single layer of clouds, like vanilla Minecraft. \n"
 							+ "True = DH will render 3 layers of clouds at different heights. \n"

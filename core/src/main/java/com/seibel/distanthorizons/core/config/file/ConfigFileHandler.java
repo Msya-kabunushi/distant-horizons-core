@@ -21,6 +21,7 @@ package com.seibel.distanthorizons.core.config.file;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.seibel.distanthorizons.core.config.ConfigHandler;
+import com.seibel.distanthorizons.core.config.Config;
 import com.seibel.distanthorizons.core.dependencyInjection.SingletonInjector;
 import com.seibel.distanthorizons.core.config.types.AbstractConfigBase;
 import com.seibel.distanthorizons.core.config.types.ConfigEntry;
@@ -55,6 +56,8 @@ public class ConfigFileHandler
 	
 	/** prevents readers/writers from overlapping and causing the config file from being duplicated or corrupted */
 	private final ReentrantLock readWriteLock = new ReentrantLock();
+	/** kabu: 雲を 1 層にする移行を済ませた印（kabu.12〜） */
+	private static final String KABU_CLOUD_LAYERS_MARKER = "_kabuCloudLayers";
 	
 	
 	
@@ -195,8 +198,15 @@ public class ConfigFileHandler
 		{
 			reCreateFile(this.configPath);
 		}
-		
-		
+
+		// kabu: kabu.11 までに書かれた「3 層の雲」を 1 回だけ消し、既定（1 層）で読み込ませる
+		if (!nightConfig.contains(KABU_CLOUD_LAYERS_MARKER))
+		{
+			nightConfig.remove(Config.Client.Advanced.Graphics.GenericRendering.enableMultiLayerClouds.getNameAndCategory());
+			nightConfig.set(KABU_CLOUD_LAYERS_MARKER, 1);
+		}
+
+
 		// Load all the entries
 		for (AbstractConfigBase<?> entry : ConfigHandler.INSTANCE.configBaseList)
 		{
