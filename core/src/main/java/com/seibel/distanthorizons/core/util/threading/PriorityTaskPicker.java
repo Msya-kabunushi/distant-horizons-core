@@ -207,17 +207,33 @@ public class PriorityTaskPicker
 			}
 		}
 		
-		// since they're all already shutting down concurrently, this is bounded by the slowest one
+		// kabu: ワールドから抜けるときに描画のスレッドで呼ばれるので、終わらない作業（や間引きの待ち）が 1 つでもあると 5 秒止まっていた。
+		// 待つのは合わせて 0.5 秒までにし、残りは割り込んで（元も 5 秒後に割り込んでいた）、さらに最長 2 秒だけ待つ
 		try
 		{
+			long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(500);
 			for (int i = 0; i < this.executors.size(); i++)
 			{
 				Executor executor = this.executors.get(i);
 				if (executor != null)
 				{
-					if (!executor.awaitTermination(5, TimeUnit.SECONDS))
+					long remaining = Math.max(0, deadline - System.nanoTime());
+					if (!executor.awaitTermination(remaining, TimeUnit.NANOSECONDS))
 					{
 						executor.shutdownNow();
+					}
+				}
+			}
+			long hardDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
+			for (int i = 0; i < this.executors.size(); i++)
+			{
+				Executor executor = this.executors.get(i);
+				if (executor != null && !executor.isTerminated())
+				{
+					long remaining = Math.max(0, hardDeadline - System.nanoTime());
+					if (!executor.awaitTermination(remaining, TimeUnit.NANOSECONDS))
+					{
+						LOGGER.warn("Thread pool [" + executor.name + "] didn't stop in time, leaving it to finish in the background.");
 					}
 				}
 			}
