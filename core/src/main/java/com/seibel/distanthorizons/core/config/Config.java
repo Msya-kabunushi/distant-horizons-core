@@ -222,7 +222,8 @@ public class Config
 						.build();
 					
 					public static ConfigEntry<EDhApiVerticalQuality> verticalQuality = new ConfigEntry.Builder<EDhApiVerticalQuality>()
-						.set(EDhApiVerticalQuality.MEDIUM)
+						// kabu: MEDIUM だと縦の区切りが足りず、宙に浮いたもの（木の葉・浮いた建物など）が地面までの柱に見えるので HIGH を既定にする
+						.set(EDhApiVerticalQuality.HIGH)
 						.comment(""
 							+ "This indicates how well LODs will represent \n"
 							+ "overhangs, caves, floating islands, etc. \n"

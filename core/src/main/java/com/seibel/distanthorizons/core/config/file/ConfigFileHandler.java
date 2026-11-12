@@ -58,6 +58,8 @@ public class ConfigFileHandler
 	private final ReentrantLock readWriteLock = new ReentrantLock();
 	/** kabu: 雲を 1 層にする移行を済ませた印（kabu.12〜） */
 	private static final String KABU_CLOUD_LAYERS_MARKER = "_kabuCloudLayers";
+	/** kabu: 縦の細かさを HIGH にする移行を済ませた印（kabu.14〜） */
+	private static final String KABU_VERTICAL_QUALITY_MARKER = "_kabuVerticalQuality";
 	
 	
 	
@@ -204,6 +206,17 @@ public class ConfigFileHandler
 		{
 			nightConfig.remove(Config.Client.Advanced.Graphics.GenericRendering.enableMultiLayerClouds.getNameAndCategory());
 			nightConfig.set(KABU_CLOUD_LAYERS_MARKER, 1);
+		}
+		// kabu: kabu.13 までの既定（MEDIUM）のままなら、1 回だけ消して新しい既定（HIGH）で読み込ませる。自分で変えた値（LOW や EXTREME など）は残す
+		if (!nightConfig.contains(KABU_VERTICAL_QUALITY_MARKER))
+		{
+			String key = Config.Client.Advanced.Graphics.Quality.verticalQuality.getNameAndCategory();
+			Object value = nightConfig.get(key);
+			if (value != null && "MEDIUM".equalsIgnoreCase(value.toString()))
+			{
+				nightConfig.remove(key);
+			}
+			nightConfig.set(KABU_VERTICAL_QUALITY_MARKER, 1);
 		}
 
 
