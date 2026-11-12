@@ -208,7 +208,7 @@ public class PriorityTaskPicker
 		}
 		
 		// kabu: ワールドから抜けるときに描画のスレッドで呼ばれるので、終わらない作業（や間引きの待ち）が 1 つでもあると 5 秒止まっていた。
-		// 待つのは合わせて 0.5 秒までにし、残りは割り込んで（元も 5 秒後に割り込んでいた）、さらに最長 2 秒だけ待つ
+		// 待つのは合わせて 0.5 秒までにし、残りは割り込んで（元も 5 秒後に割り込んでいた）、0.1 秒だけ待つ（Render Loader は止まっている描画のスレッドを待つので、待っても終わらない。元も割り込んだあとは待たない）
 		try
 		{
 			long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(500);
@@ -224,7 +224,7 @@ public class PriorityTaskPicker
 					}
 				}
 			}
-			long hardDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
+			long hardDeadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(100);
 			for (int i = 0; i < this.executors.size(); i++)
 			{
 				Executor executor = this.executors.get(i);
