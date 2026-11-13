@@ -112,6 +112,16 @@ void main()
         // Smoothly transition between combinedMcDhColor and uDhColorTexture
         // as the depth increases from the camera
         float fadeStep = smoothstep(uStartFadeBlockDistance, uEndFadeBlockDistance, mcFragmentDistance);
+
+        // kabu: DH の画素がバニラの画素よりずっと奥にあるとき（水・エンティティ・パーティクルの向こうの遠い LOD）は混ぜない。
+        // 混ぜると、手前の水などが奥の霧のかかった LOD の色で上書きされ、霧が水より手前に出て見える
+        float dhFragmentDistance = length(dhVertexWorldPos.xzy);
+        float allowedGap = 16.0 + mcFragmentDistance * 0.1;
+        if (dhColor != combinedMcDhColor && dhFragmentDistance > mcFragmentDistance + allowedGap)
+        {
+            fadeStep = 0.0;
+        }
+
         fragColor = mix(combinedMcDhColor, dhColor, fadeStep);
         fragColor.a = 1.0;
     }
